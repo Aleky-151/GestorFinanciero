@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Mis finanzas</title></head>
+<body>
+    <h1>Mis finanzas</h1>
+    <ul>
+        <li th:each="c : ${categorias}" th:text="${c.categoria}"></li>    
+    </ul>
+</body>
+</html>

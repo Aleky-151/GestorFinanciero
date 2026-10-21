@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Registro</title></head>
+<body>
+    <h1>Crear cuenta</h1>
+    <form th:action="@{/registro}" th:object="${registroForm}" method="post">
+        <div th:if="${#fields.hasGlobalErrors()}" style="color:red">
+            <p th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+        </div>
+
+        <p><label>Nombres</label><br><input type="text" th:field="*{nombres}">
+           <span th:errors="*{nombres}" style="color:red"></span></p>
+        <p><label>Apellido paterno</label><br><input type="text" th:field="*{apPaterno}">
+           <span th:errors="*{apPaterno}" style="color:red"></span></p>
+        <p><label>Apellido materno</label><br><input type="text" th:field="*{apMaterno}"></p>
+        <p><label>Usuario</label><br><input type="text" th:field="*{usuario}">
+           <span th:errors="*{usuario}" style="color:red"></span></p>
+        <p><label>Clave</label><br><input type="password" th:field="*{clave}">
+           <span th:errors="*{clave}" style="color:red"></span></p>
+
+        <button type="submit">Registrarme</button>
+        <a th:href="@{/login}">Ya tengo cuenta</a>
+    </form>
+</body>
+</html>

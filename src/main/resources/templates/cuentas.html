@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Mis cuentas</title></head>
+<body>
+    <h1>Mis cuentas</h1>
+    <p th:if="${mensaje}" th:text="${mensaje}" style="color:green"></p>
+    <p th:if="${error}" th:text="${error}" style="color:red"></p>
+
+    <p><a th:href="@{/cuentas/nuevo}">+ Nueva cuenta</a></p>
+
+    <table border="1" cellpadding="6">
+        <tr><th>Cuenta</th><th>Tipo</th><th>Saldo</th><th></th></tr>
+        <tr th:each="c : ${cuentas}">
+            <td th:text="${c.nombreCuenta}"></td>
+            <td th:text="${c.categoria.categoria}"></td>
+            <td th:text="${'S/ ' + #numbers.formatDecimal(c.saldo, 1, 2)}"></td>
+            <td><a th:href="@{/cuentas/{id}/editar(id=${c.id})}">Editar</a>
+		<form th:action="@{/cuentas/{id}/eliminar(id=${c.id})}" method="post" style="display:inline"
+                      	onsubmit="return confirm('¿Eliminar esta cuenta?')">
+                	<button type="submit">Eliminar</button>
+    		</form>
+	     </td>
+        </tr>
+    </table>
+
+    <p>
+        <a th:href="@{/gastos/nuevo}">+ Registrar gasto</a> |
+        <a th:href="@{/ingresos/nuevo}">+ Registrar ingreso</a>
+    </p>
+	
+    <footer>
+	<form th:action="@{/logout}" method="post">
+    		<button type="submit">Cerrar sesión</button>
+	</form>
+    </footer>
+</body>
+</html>

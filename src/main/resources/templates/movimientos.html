@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Mis movimientos</title></head>
+<body>
+    <h1>Mis movimientos</h1>
+    <p th:if="${mensaje}" th:text="${mensaje}" style="color:green"></p>
+
+    <table border="1" cellpadding="6">
+        <tr><th>Cuenta</th><th>Movimiento</th><th>Tipo</th><th>Fecha</th><th>Monto</th></tr>
+        <tr th:each="m : ${movimientos}">
+            <td th:text="${m.cuenta.nombreCuenta}"></td>
+	    <td th:text="${m.descripcion}"></td>
+	    <td th:text="${m instanceof T(com.finanzas.gestorFinanciero.model.Ingreso)} ? 'Ingreso' : 'Gasto'"></td>
+	    <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>            
+	    <td th:text="${'S/ ' + #numbers.formatDecimal(m.monto, 1, 2)}"></td>
+        </tr>
+    </table>
+</body>
+</html>
