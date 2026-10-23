@@ -71,7 +71,7 @@ public class CuentaService {
         cuentaRepo.delete(cuenta);
     }
     
-    private Cuenta cuentaDelCliente(Long idCuenta, Long codCliente) {
+    public Cuenta cuentaDelCliente(Long idCuenta, Long codCliente) {
         Cuenta c = cuentaRepo.findById(idCuenta)
                 .orElseThrow(() -> new NegocioException("La cuenta no existe"));
         if (!c.getCliente().getCodCliente().equals(codCliente)) {

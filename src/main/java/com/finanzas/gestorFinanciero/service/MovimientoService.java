@@ -4,7 +4,7 @@
  */
 package com.finanzas.gestorFinanciero.service;
 
-import com.finanzas.gestorFinanciero.dto.security.UsuarioPrincipal;
+import com.finanzas.gestorFinanciero.dto.MovimientoEditForm;
 import com.finanzas.gestorFinanciero.model.*;
 import com.finanzas.gestorFinanciero.model.Categorias.*;
 import com.finanzas.gestorFinanciero.repository.*;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MovimientoService {
 
+    private final CuentaService cuentaServ;
     private final CuentaRepository cuentaRepo;
     private final GastoRepository gastoRepo;
     private final IngresoRepository ingresoRepo;
@@ -24,7 +25,8 @@ public class MovimientoService {
     private final CategoriaIngresoRepository catIngresoRepo;
     private final MovimientoRepository movimientoRepo;
 
-    public MovimientoService(CuentaRepository cuentaRepo, GastoRepository gastoRepo, IngresoRepository ingresoRepo, CategoriaGastoRepository catGastoRepo, CategoriaIngresoRepository catIngresoRepo, MovimientoRepository movimientoRepo) {
+    public MovimientoService(CuentaService cuentaServ, CuentaRepository cuentaRepo, GastoRepository gastoRepo, IngresoRepository ingresoRepo, CategoriaGastoRepository catGastoRepo, CategoriaIngresoRepository catIngresoRepo, MovimientoRepository movimientoRepo) {
+        this.cuentaServ = cuentaServ;
         this.cuentaRepo = cuentaRepo;
         this.gastoRepo = gastoRepo;
         this.ingresoRepo = ingresoRepo;
@@ -39,7 +41,7 @@ public class MovimientoService {
                                 BigDecimal monto, LocalDate fecha) {
         validarMonto(monto);
 
-        Cuenta cuenta = cuentaDelCliente(idCuenta,idCliente);
+        Cuenta cuenta = cuentaServ.cuentaDelCliente(idCuenta,idCliente);
         CategoriaGasto categoria = catGastoRepo.findById(idCategoria)
                 .orElseThrow(() -> new NegocioException("La categoría no existe"));
 
@@ -71,7 +73,7 @@ public class MovimientoService {
                                     BigDecimal monto, LocalDate fecha) {
         validarMonto(monto);
 
-        Cuenta cuenta = cuentaDelCliente(idCuenta, idCliente);
+        Cuenta cuenta = cuentaServ.cuentaDelCliente(idCuenta, idCliente);
         CategoriaIngreso categoria = catIngresoRepo.findById(idCategoria)
                 .orElseThrow(() -> new NegocioException("La categoría no existe"));
 
@@ -93,12 +95,63 @@ public class MovimientoService {
         }
     }
     
-    private Cuenta cuentaDelCliente(Long idCuenta, Long codCliente) {
-        Cuenta c = cuentaRepo.findById(idCuenta)
-                .orElseThrow(() -> new NegocioException("La cuenta no existe"));
-        if (!c.getCliente().getCodCliente().equals(codCliente)) {
-            throw new NegocioException("La cuenta no existe");   
-        }
-        return c;
+    // Efecto del movimiento sobre el saldo
+    private BigDecimal efecto(Movimiento m) {
+        return (m instanceof Ingreso) ? m.getMonto() : m.getMonto().negate();
     }
+    
+    private Movimiento movimientoDelCliente(Long id, Long codCliente) {
+        Movimiento m = movimientoRepo.findById(id)
+                .orElseThrow(() -> new NegocioException("El movimiento no existe"));
+        // valida que la cuenta del movimiento sea de la usuaria
+        cuentaServ.cuentaDelCliente(m.getCuenta().getId(), codCliente);
+        return m;
+    }
+    
+    @Transactional(readOnly = true)
+    public Movimiento obtener(Long id, Long codCliente) {
+        return movimientoDelCliente(id, codCliente);
+    }
+
+    @Transactional
+    public void eliminar(Long id, Long codCliente) {
+        Movimiento m = movimientoDelCliente(id, codCliente);
+        Cuenta cuenta = m.getCuenta();
+
+        BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(efecto(m));   // deshacer
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            throw new NegocioException("No puedes eliminar este ingreso: el saldo quedaría negativo");
+        }
+        cuenta.setSaldo(nuevoSaldo);
+        cuentaRepo.save(cuenta);
+        movimientoRepo.delete(m);
+    }
+
+    @Transactional
+    public void actualizar(Long id, MovimientoEditForm f, Long codCliente) {
+        Movimiento m = movimientoDelCliente(id, codCliente);
+        validarMonto(f.getMonto());
+        Cuenta cuenta = m.getCuenta();
+
+        BigDecimal efectoViejo = efecto(m);
+
+        m.setDescripcion(f.getDescripcion());
+        m.setMonto(f.getMonto());
+        m.setFecha(f.getFecha());
+        if (m instanceof Gasto g) {
+            g.setCategoria(catGastoRepo.findById(f.getIdCategoria())
+                    .orElseThrow(() -> new NegocioException("La categoría no existe")));
+        } else if (m instanceof Ingreso i) {
+            i.setCategoria(catIngresoRepo.findById(f.getIdCategoria())
+                    .orElseThrow(() -> new NegocioException("La categoría no existe")));
+        }
+
+        // saldo = saldo - efectoViejo + efectoNuevo
+        BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(efectoViejo).add(efecto(m));
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            throw new NegocioException("Saldo insuficiente para ese monto");   // rollback automático
+        }
+        cuenta.setSaldo(nuevoSaldo);
+        cuentaRepo.save(cuenta);
+    }   
 }

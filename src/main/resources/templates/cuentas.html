@@ -1,37 +1,45 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Mis cuentas</title></head>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Mis cuentas</title>
+</head>
 <body>
-    <h1>Mis cuentas</h1>
-    <p th:if="${mensaje}" th:text="${mensaje}" style="color:green"></p>
-    <p th:if="${error}" th:text="${error}" style="color:red"></p>
+<section>
+    <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
 
-    <p><a th:href="@{/cuentas/nuevo}">+ Nueva cuenta</a></p>
-
-    <table border="1" cellpadding="6">
-        <tr><th>Cuenta</th><th>Tipo</th><th>Saldo</th><th></th></tr>
-        <tr th:each="c : ${cuentas}">
-            <td th:text="${c.nombreCuenta}"></td>
-            <td th:text="${c.categoria.categoria}"></td>
-            <td th:text="${'S/ ' + #numbers.formatDecimal(c.saldo, 1, 2)}"></td>
-            <td><a th:href="@{/cuentas/{id}/editar(id=${c.id})}">Editar</a>
-		<form th:action="@{/cuentas/{id}/eliminar(id=${c.id})}" method="post" style="display:inline"
-                      	onsubmit="return confirm('¿Eliminar esta cuenta?')">
-                	<button type="submit">Eliminar</button>
-    		</form>
-	     </td>
-        </tr>
-    </table>
-
-    <p>
-        <a th:href="@{/gastos/nuevo}">+ Registrar gasto</a> |
-        <a th:href="@{/ingresos/nuevo}">+ Registrar ingreso</a>
-    </p>
-	
-    <footer>
-	<form th:action="@{/logout}" method="post">
-    		<button type="submit">Cerrar sesión</button>
-	</form>
-    </footer>
+    <div class="card">
+        <div class="card-header py-4 px-4">
+            <h3 class="card-title" style="font-size:1.5rem">Mis Cuentas</h3> 
+            <div class="card-tools">
+                <a th:href="@{/cuentas/nuevo}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Nueva cuenta
+                </a>
+            </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap">
+                <thead>
+                    <tr><th>Cuenta</th><th>Tipo</th><th class="text-right">Saldo</th><th></th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${cuentas}">
+                        <td th:text="${c.nombreCuenta}"></td>
+                        <td><span class="badge badge-info" th:text="${c.categoria.categoria}"></span></td>
+                        <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(c.saldo, 1, 2)}"></td>
+                        <td class="text-right">
+                            <a th:href="@{/cuentas/{id}/editar(id=${c.id})}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <form th:action="@{/cuentas/{id}/eliminar(id=${c.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('¿Eliminar esta cuenta?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 </body>
 </html>

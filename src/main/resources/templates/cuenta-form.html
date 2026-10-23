@@ -1,43 +1,57 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Cuenta</title></head>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Cuenta</title>
+</head>
 <body>
-    <h1 th:text="${cuentaForm.idCuenta == null} ? 'Nueva cuenta' : 'Editar cuenta'"></h1>
-
-    <form th:action="${cuentaForm.idCuenta == null} ? @{/cuentas} : @{/cuentas/{id}(id=${cuentaForm.idCuenta})}"
-          th:object="${cuentaForm}" method="post">
-
-        <input type="hidden" th:field="*{idCuenta}">
-
-        <div th:if="${#fields.hasGlobalErrors()}" style="color:red">
-            <p th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+<section>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title" th:text="${cuentaForm.idCuenta == null} ? 'Nueva cuenta' : 'Editar cuenta'"></h3>
         </div>
-	<div th:if="${#fields.hasErrors('*')}" style="color:red">
-    	    <p th:each="e : ${#fields.allErrors()}" th:text="${e}"></p>
-	</div>
-        <p>
-            <label>Nombre de la cuenta</label><br>
-            <input type="text" th:field="*{nombreCuenta}">
-            <span th:errors="*{nombreCuenta}" style="color:red"></span>
-        </p>
+        
+        <form th:action="${cuentaForm.idCuenta == null} ? @{/cuentas} : @{/cuentas/{id}(id=${cuentaForm.idCuenta})}"
+              th:object="${cuentaForm}" method="post">
 
-        <p>
-            <label>Tipo de cuenta</label><br>
-            <select th:field="*{idCategoria}">
-                <option value="">-- elige --</option>
-                <option th:each="k : ${categorias}" th:value="${k.id}" th:text="${k.categoria}"></option>
-            </select>
-            <span th:errors="*{idCategoria}" style="color:red"></span>
-        </p>
+            <input type="hidden" th:field="*{idCuenta}">
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                    <p class="mb-0" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+                </div>
+                
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <p class="mb-0" th:each="e : ${#fields.allErrors()}" th:text="${e}"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nombre de la cuenta</label>
+                    <input type="text" class="form-control" th:field="*{nombreCuenta}">
+                    <small class="alert alert-danger" th:errors="*{nombreCuenta}"></small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de cuenta</label>
+                    <select class="form-control" th:field="*{idCategoria}">
+                        <option value="">[seleccionar tipo]</option>
+                        <option th:each="k : ${categorias}" th:value="${k.id}" th:text="${k.categoria}"></option>
+                    </select>
+                    <small class="alert alert-danger" th:errors="*{idCategoria}"></small>
+                </div>
 
-        <p th:if="${cuentaForm.idCuenta == null}">
-            <label>Saldo inicial</label><br>
-            <input type="number" step="0.01" th:field="*{saldo}">
-            <span th:errors="*{saldo}" style="color:red"></span>
-        </p>
-
-        <button type="submit">Guardar</button>
-        <a th:href="@{/cuentas}">Cancelar</a>
-    </form>
+                <div class="form-group" th:if="${cuentaForm.idCuenta == null}">
+                    <label>Saldo inicial</label>
+                    <input type="number" step="0.01" class="form-control" th:field="*{saldo}">
+                    <small class="alert alert-danger" th:errors="*{saldo}"></small>
+                </div>
+                
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a th:href="@{/cuentas}" class="btn btn-default">Cancelar</a>
+                </div>
+        </form>
+    </div>
+</section>
 </body>
 </html>
