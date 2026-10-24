@@ -9,7 +9,6 @@ import com.finanzas.gestorFinanciero.dto.MetaForm;
 import com.finanzas.gestorFinanciero.dto.security.UsuarioPrincipal;
 import com.finanzas.gestorFinanciero.model.Meta;
 import com.finanzas.gestorFinanciero.repository.CuentaRepository;
-import com.finanzas.gestorFinanciero.repository.EstadoMetaRepository;
 import com.finanzas.gestorFinanciero.repository.MetaRepository;
 import com.finanzas.gestorFinanciero.repository.TipoMetaRepository;
 import com.finanzas.gestorFinanciero.service.AporteCommand;
@@ -33,14 +32,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MetaController {
     private final MetaRepository metaRepo;
     private final TipoMetaRepository tipoMetaRepo;
-    private final EstadoMetaRepository estadoMetaRepo;
     private final MetaService metaService;
     private final CuentaRepository cuentaRepo;
 
-    public MetaController(MetaRepository metaRepo, TipoMetaRepository tipoMetaRepo, EstadoMetaRepository estadoMetaRepo, MetaService metaService, CuentaRepository cuentaRepo) {
+    public MetaController(MetaRepository metaRepo, TipoMetaRepository tipoMetaRepo, MetaService metaService, CuentaRepository cuentaRepo) {
         this.metaRepo = metaRepo;
         this.tipoMetaRepo = tipoMetaRepo;
-        this.estadoMetaRepo = estadoMetaRepo;
         this.metaService = metaService;
         this.cuentaRepo = cuentaRepo;
     }
@@ -168,6 +165,34 @@ public class MetaController {
         return "aporte-form";
     }
     
+    @GetMapping("/retirar")
+    public String formRetiro(@AuthenticationPrincipal UsuarioPrincipal p, Model model) {
+        AporteForm form = new AporteForm();
+        form.setFecha(LocalDate.now());
+        model.addAttribute("retiroForm", form);
+        cargarListas(model, p);              
+        return "retiro-form";
+    }
+    
+    @PostMapping("/retirar")
+    public String retirar(@Valid @ModelAttribute("retiroForm") AporteForm form,
+                          BindingResult result, @AuthenticationPrincipal UsuarioPrincipal p,
+                          Model model, RedirectAttributes ra) {
+        if (!result.hasErrors()) {
+            try {
+                metaService.retirar(
+                    new AporteCommand(form.getIdMeta(), form.getIdCuenta(), form.getMonto(), form.getFecha()),
+                    p.getCodCliente());
+                ra.addFlashAttribute("mensaje", "Retiro exitoso ✅");
+                return "redirect:/metas";
+            } catch (NegocioException e) {
+                result.reject("negocio", e.getMessage());
+            }
+        }
+        cargarListas(model, p);
+        return "retiro-form";
+    }
+    
     private void cargarTipos(Model model) {
         model.addAttribute("tipos", tipoMetaRepo.findAll());
     }
@@ -176,5 +201,6 @@ public class MetaController {
         model.addAttribute("cuentas", cuentaRepo.listarPorCliente(p.getCodCliente()));
         model.addAttribute("metas", metaRepo.listarPorCliente(p.getCodCliente()));
         model.addAttribute("aportables", metaService.listarAportables(p.getCodCliente()));
+        model.addAttribute("retirables", metaService.listarRetirables(p.getCodCliente()));
     }
 }

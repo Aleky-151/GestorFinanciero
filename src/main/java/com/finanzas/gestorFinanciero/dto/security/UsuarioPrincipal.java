@@ -13,15 +13,21 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
  *
  * @author adris
  */
-public class UsuarioPrincipal extends org.springframework.security.core.userdetails.User{
+public class UsuarioPrincipal extends org.springframework.security.core.userdetails.User {
+
     private final Long codCliente;
+    private final String nombreCompleto;
 
     public UsuarioPrincipal(Usuario u) {
         super(u.getUsuario(), u.getClave(), List.of(new SimpleGrantedAuthority("ROLE_USER")));
-        this.codCliente = u.getCliente().getCodCliente();
+        this.codCliente = u.getCliente().getCodCliente();   // ajusta si lo renombraste a getId()
+        this.nombreCompleto = u.getCliente().getNombres() + " " + u.getCliente().getAp_paterno();
     }
 
-    public Long getCodCliente() {
-        return codCliente;
+    public Long getCodCliente() { return codCliente; }
+    public String getNombreCompleto() { return nombreCompleto; }
+
+    public String getIniciales() {
+        return nombreCompleto.isBlank() ? "?" : nombreCompleto.substring(0, 1).toUpperCase();
     }
 }

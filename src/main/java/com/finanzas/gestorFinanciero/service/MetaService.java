@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,8 @@ public class MetaService {
     private final AporteMetaRepository aporteRepo;
     private final CuentaRepository cuentaRepo;
     private final CuentaService cuentaService;
-    private static final Long ESTADO_ACTIVA = 1L;
+    private static final Long ESTADO_PROGRESO = 1L;
+    private static final Long ESTADO_CANCELADA = 4L;
 
     public MetaService(MetaRepository metaRepo, TipoMetaRepository tipoMetaRepo, EstadoMetaRepository estadoMetaRepo, ClienteRepository clienteRepo, AporteMetaRepository aporteRepo, CuentaRepository cuentaRepo, CuentaService cuentaService) {
         this.metaRepo = metaRepo;
@@ -64,11 +66,18 @@ public class MetaService {
     @Transactional(readOnly = true)
     public List<Meta> listarAportables(Long codCliente) {
         LocalDate hoy = LocalDate.now();
-        return metaRepo.listarPorClienteYEstado(codCliente, ESTADO_ACTIVA).stream()
+        return metaRepo.listarPorClienteYEstado(codCliente, ESTADO_PROGRESO).stream()
                 .filter(m -> !m.getFechaLimite().isBefore(hoy))   
                 .toList();
     }
     
+    @Transactional(readOnly = true)
+    public List<Meta> listarRetirables(Long codCliente) {
+        return metaRepo.listarPorCliente(codCliente).stream()
+                .filter(m -> m.getEstado().getId()!= ESTADO_CANCELADA)
+                .toList();
+    }
+        
     @Transactional
     public Meta crear(MetaForm form, Long codCliente) {
         TipoMeta tipoMeta= tipoMetaRepo.findById(form.getIdTipo())
@@ -188,7 +197,41 @@ public class MetaService {
             throw traducir(ex);              
         }
     }
+   
+    @Transactional
+    public void retirar(AporteCommand cmd, Long codCliente) {
+        validarMonto(cmd.monto());
 
+        Meta meta = metaDelCliente(cmd.idMeta(), codCliente);
+        
+        if (Objects.equals(meta.getEstado().getId(), ESTADO_CANCELADA)) {
+            throw new NegocioException("No se puede retirar de una meta cancelada");
+        }
+        if (meta.getSaldo()== BigDecimal.ZERO) {
+            throw new NegocioException("No hay saldo por retirar en la meta");
+        }
+        
+        if (meta.getSaldo().compareTo(cmd.monto()) < 0) {
+            throw new NegocioException("La meta solo tiene S/ " + meta.getSaldo() + " disponible");
+        }
+        
+        Cuenta cuenta = cuentaService.cuentaDelCliente(cmd.idCuenta(), codCliente);
+        try {
+            cuenta.setSaldo(cuenta.getSaldo().add(cmd.monto()));
+            cuentaRepo.save(cuenta);
+
+            AporteMeta retiro = new AporteMeta();
+            retiro.setMeta(meta);
+            retiro.setCuenta(cuenta);
+            retiro.setMonto(cmd.monto());
+            retiro.setFecha(cmd.fecha());
+            retiro.setTipo('R');
+            aporteRepo.saveAndFlush(retiro);   //INSERT
+        } catch (DataAccessException ex) {
+            throw traducir(ex);              
+        }
+    }
+    
     private void validarMonto(BigDecimal monto) {
         if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new NegocioException("El monto debe ser mayor a 0");

@@ -15,7 +15,7 @@ import org.springframework.data.repository.query.Param;
  * @author adris
  */
 public interface MetaRepository extends JpaRepository<Meta,Long>{
-    @Query("SELECT m FROM Meta m JOIN FETCH m.tipo WHERE m.cliente.codCliente = :cod ORDER BY m.nombreMeta")
+    @Query("SELECT m FROM Meta m JOIN FETCH m.tipo WHERE m.cliente.codCliente = :cod ORDER BY m.tipo.id")
     List<Meta> listarPorCliente(@Param("cod") Long cod);
     
     @Query("SELECT m FROM Meta m WHERE m.cliente.codCliente = :cod AND m.estado.id = :estado ORDER BY m.nombreMeta")

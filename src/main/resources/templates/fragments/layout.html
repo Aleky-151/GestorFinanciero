@@ -6,8 +6,9 @@
     <title th:replace="${titulo}">Mis finanzas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body class="hold-transition sidebar-mini">
+<body class="hold-transition sidebar-mini layout-fixed sidebar-no-expand">
 <div class="wrapper">
 
     <!-- Navbar -->
@@ -18,22 +19,38 @@
             </li>
         </ul>
         <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <form th:action="@{/logout}" method="post" class="form-inline">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-                    </button>
-                </form>
+            <li class="nav-item dropdown">
+                <a class="nav-link d-flex align-items-center" data-toggle="dropdown" href="#" role="button">
+                    <span class="d-none d-md-inline mr-2" th:text="${usuarioActual.nombreCompleto}">Nombre</span>
+                    <span class="avatar-circle" th:text="${usuarioActual.iniciales}">A</span>
+                    <i class="fas fa-chevron-down ml-2 small text-muted"></i>
+                    
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <span class="dropdown-item-text">
+                        <strong class="d-block" th:text="${usuarioActual.nombreCompleto}">Nombre</strong>
+                        <small class="text-muted" th:text="${'@' + usuarioActual.username}">@usuario</small>
+                    </span>
+                    <div class="dropdown-divider"></div>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar sesión
+                        </button>
+                    </form>
+                </div>
             </li>
         </ul>
     </nav>
 
     <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a th:href="@{/cuentas}" class="brand-link">
-            <i class="fas fa-wallet brand-image" style="margin-left:1.2rem"></i>
-            <span class="brand-text font-weight-light">Mis finanzas</span>
-        </a>
+        <div class="sidebar-head d-flex align-items-center">
+            <a th:href="@{/cuentas}" class="brand-link flex-grow-1">
+                <i class="fas fa-wallet brand-image"></i>
+                <span class="brand-text font-weight-light">Mis finanzas</span>
+            </a>
+        </div>
+        
         <div class="sidebar">
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">

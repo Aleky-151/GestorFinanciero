@@ -17,6 +17,9 @@
                 <a th:href="@{/metas/aportar}" class="btn btn-outline-success btn-sm">
                     <i class="fas fa-dollar-sign"></i> Aportar
                 </a>
+                <a th:href="@{/metas/retirar}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-dollar-sign"></i> Retirar
+                </a>
             </div>
        </div>
         <div class="card-body table-responsive p-0">
@@ -54,7 +57,7 @@
                                 <button class="btn btn-sm btn-outline-primary">Cancelar</button>
                             </form>
                             
-                            <form th:if="${!f.tieneAportes()}"
+                            <form th:if="${!f.tieneAportes() or f.meta().estado.id == 4}"
                                   th:action="@{/metas/{id}/eliminar(id=${f.meta().id})}" method="post" class="d-inline"
                                   onsubmit="return confirm('¿Eliminar definitivamente?')">
                                 <button class="btn btn-sm btn-outline-danger">Eliminar</button>

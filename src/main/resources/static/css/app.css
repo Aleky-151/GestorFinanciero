@@ -1,0 +1,22 @@
+.main-sidebar {
+    flex-direction: column;
+}
+.main-sidebar .sidebar {
+    min-height: 0;      
+    height: auto;
+}
+
+.main-header .nav-link { padding-top: .2rem; padding-bottom: .2rem; }
+
+.avatar-circle {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: #007bff;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}

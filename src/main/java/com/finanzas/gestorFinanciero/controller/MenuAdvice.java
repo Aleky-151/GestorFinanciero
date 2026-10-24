@@ -5,9 +5,11 @@
 package com.finanzas.gestorFinanciero.controller;
 
 import com.finanzas.gestorFinanciero.dto.MenuItem;
+import com.finanzas.gestorFinanciero.dto.security.UsuarioPrincipal;
 import com.finanzas.gestorFinanciero.service.MenuService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -32,5 +34,10 @@ public class MenuAdvice {
     @ModelAttribute("rutaActual")
     public String rutaActual(HttpServletRequest request) {
         return request.getRequestURI();
+    }
+    
+    @ModelAttribute("usuarioActual")
+    public UsuarioPrincipal usuarioActual(@AuthenticationPrincipal UsuarioPrincipal p) {
+        return p;  
     }
 }
