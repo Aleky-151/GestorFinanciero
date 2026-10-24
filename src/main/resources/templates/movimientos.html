@@ -30,14 +30,14 @@
         <div class="card-body table-responsive p-0">
             <table class="table table-hover text-nowrap">
                 <thead>
-                    <tr><th>Cuenta</th><th>Movimiento</th><th>Tipo</th><th>Fecha</th><th>Monto</th></tr>
+                    <tr><th>Cuenta</th><th>Movimiento</th><th class="text-center">Tipo</th><th class="text-center">Fecha</th><th class="text-right">Monto</th></tr>
                 </thead>
                 <tbody>
                         <tr th:each="m : ${movimientos}">
                         <td th:text="${m.cuenta.nombreCuenta}"></td>
                         <td th:text="${m.descripcion}"></td>
-                        <td><span class="badge badge-info" th:text="${m instanceof T(com.finanzas.gestorFinanciero.model.Ingreso)} ? 'Ingreso' : 'Gasto'"></span></td>
-                        <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>            
+                        <td class="text-center"><span class="badge badge-info" th:text="${m instanceof T(com.finanzas.gestorFinanciero.model.Ingreso)} ? 'Ingreso' : 'Gasto'"></span></td>
+                        <td class="text-center" th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>            
                         <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(m.monto, 1, 2)}"></td>
                         <td class="text-right">
                             <a th:href="@{/movimientos/{id}/editar(id=${m.id})}" class="btn btn-sm btn-outline-primary">Editar</a>

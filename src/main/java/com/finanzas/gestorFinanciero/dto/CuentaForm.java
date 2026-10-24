@@ -17,9 +17,6 @@ public class CuentaForm {
     @Size(max=80, message= "Máximo 80 caracteres")
     private String nombreCuenta;
     
-    //@NotNull(message= "Ingrese su codigo de cliente")
-    //private Long codCliente;
-    
     @NotNull(message= "Elige una categoria")
     private Long idCategoria;
     
@@ -34,15 +31,6 @@ public class CuentaForm {
     public void setNombreCuenta(String nombreCuenta) {
         this.nombreCuenta = nombreCuenta;
     }
-    /*
-    public Long getCodCliente() {
-        return codCliente;
-    }
-
-    public void setCodCliente(Long codCliente) {
-        this.codCliente = codCliente;
-    }
-    */
 
     public Long getIdCuenta() {
         return idCuenta;

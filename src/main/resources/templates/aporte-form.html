@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Aporte</title>
+</head>
+<body>
+    <section>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Registrar Aporte</h3>
+            </div>
+            
+        <form th:action="@{/metas/aportar}" th:object="${aporteForm}" method="post">
+            
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <p class="mb-0" th:each="e : ${#fields.allErrors()}" th:text="${e}"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Meta Financiera</label>
+                    <select class="form-control" th:field="*{idMeta}">
+                        <option th:each="m : ${aportables}" th:value="${m.id}" th:text="${m.nombreMeta}"></option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Cuenta de Origen</label>
+                    <select class="form-control" th:field="*{idCuenta}">
+                        <option th:each="c : ${cuentas}" th:value="${c.id}" th:text="${c.nombreCuenta}"></option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Monto</label>
+                    <input type="number" step="0.1" class="form-control" th:field="*{monto}">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" class="form-control" th:field="*{fecha}">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a th:href="@{/metas}" class="btn btn-default">Cancelar</a>
+            </div>
+        </form>
+        </div>
+    </section>
+</body>
+</html>

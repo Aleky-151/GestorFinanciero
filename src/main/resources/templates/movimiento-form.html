@@ -15,10 +15,8 @@
             <input type="hidden" th:field="*{id}">
             
             <div class="card-body">
-                 <div class="form-group">
-                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
-                        <p th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
-                    </div>
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <p class="mb-0" th:each="e : ${#fields.allErrors()}" th:text="${e}"></p>
                 </div>
                  
                 <div class="form-group">
@@ -26,32 +24,28 @@
                     <select class="form-control" th:field="*{idCategoria}">
                         <option th:each="k : ${categorias}" th:value="${k.id}" th:text="${k.categoria}"></option>
                     </select>
-                    <small class="alert alert-danger" th:errors="*{idCategoria}"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Descripción</label>
                     <input type="text" class="form-control" th:field="*{descripcion}">
-                    <small class="alert alert-danger" th:errors="*{descripcion}"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Monto</label>
                     <input type="number" step="0.01" class="form-control" th:field="*{monto}">
-                    <small class="alert alert-danger" th:errors="*{monto}"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Fecha</label>
                     <input type="date" class="form-control" th:field="*{fecha}">
-                    <small class="alert alert-danger" th:errors="*{fecha}"></small>
                 </div>
             </div>
-        </form>
             <div class="card-footer"
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <a th:href="@{/movimientos}" class="btn btn-default">Cancelar</a>
             </div>
+            </form>
         </div>
     </section>
 </body>

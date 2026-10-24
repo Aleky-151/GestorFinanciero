@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">>
+<head>
+	<title>Metas financieras</title>
+</head>
+<body>
+<section>
+    <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}"></div>
+    <div class= "card">
+	<div class="card-header py-4 px-4">
+	    <h3 class="card-title" style="font-size:1.5rem">Mis Metas Financieras</h3> 
+	    <div class="card-tools">
+                <a th:href="@{/metas/nuevo}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Nueva meta
+                </a>
+                <a th:href="@{/metas/aportar}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-dollar-sign"></i> Aportar
+                </a>
+            </div>
+       </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap">
+                <thead>
+                    <tr><th>Meta Financiera</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-right">Monto Objetivo</th>
+                        <th class="text-center">Fecha Limite</th>
+                        <th class="text-right">Saldo</th></tr>
+                </thead>
+                <tbody>
+                        <tr th:each="f : ${metas}">
+                        <td th:text="${f.meta().nombreMeta}"></td>
+                        <td class="text-center" th:text="${f.meta().tipo.tipo}"></td>
+                        <td class="text-center">
+                            <form th:if="${f.meta().estado.id == 1}">
+                            <span class="badge badge-info" th:text="${f.meta().estado.estado}"></span></form>
+               
+                            <form th:if="${f.meta().estado.id == 2}">
+                            <span class="badge badge-success" th:text="${f.meta().estado.estado}"></span></form>
+                        
+                            <form th:if="${f.meta().estado.id > 2}">
+                            <span class="badge badge-danger" th:text="${f.meta().estado.estado}"></span></form>
+                        </td>
+                        <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(f.meta().montoObjetivo, 1, 2)}"></td>
+                        <td class="text-center" th:text="${#temporals.format(f.meta().fechaLimite, 'dd/MM/yyyy')}"></td>            
+                        <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(f.meta().saldo, 1, 2)}"></td>
+                        
+                        <td class="text-right">
+                            <form th:if="${f.meta().estado.id == 1 and f.tieneAportes()}"
+                                th:action="@{/metas/{id}/cancelar(id=${f.meta().id})}" method="post" class="d-inline"
+                                onsubmit="return confirm('¿Cancelar esta meta? Se devolverá el saldo acumulado.')">
+                                <button class="btn btn-sm btn-outline-primary">Cancelar</button>
+                            </form>
+                            
+                            <form th:if="${!f.tieneAportes()}"
+                                  th:action="@{/metas/{id}/eliminar(id=${f.meta().id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('¿Eliminar definitivamente?')">
+                                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            </form>                            
+                        </td>
+                        
+                    </tr>
+                </tbody>
+            </table>
+	</div>
+    </div>
+</section>
+</body>
+</html>

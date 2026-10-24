@@ -40,7 +40,6 @@
 		    <li class="nav-item" th:each="op : ${menu}"
        	 		th:classappend="${op.tieneHijos() and op.activo(rutaActual)} ? 'menu-open'">
 
-        		<!-- opción simple -->
         		<a th:if="${!op.tieneHijos()}" th:href="@{${op.url()}}" class="nav-link"
           			th:classappend="${op.activo(rutaActual)} ? 'active'">
          		 	<i th:class="${'nav-icon ' + op.icono()}"></i>
