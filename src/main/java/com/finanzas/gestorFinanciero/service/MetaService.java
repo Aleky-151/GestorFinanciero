@@ -103,11 +103,23 @@ public class MetaService {
     
     @Transactional
     public void eliminar(Long id, Long codCliente) {
-        Meta meta= metaDelCliente(id, codCliente);
-        if(aporteRepo.existenAportesDeMeta(id)){
-            throw new NegocioException("No se puede eliminar una meta con aportes. Opte por cancelarla.");
+        Meta meta = metaDelCliente(id, codCliente);
+
+        if (aporteRepo.existsByMetaId(id)) {
+            if (meta.getEstado().getId() != ESTADO_CANCELADA) {  
+                throw new NegocioException("No se puede eliminar una meta con aportes. Opte por cancelarla.");
+            }
+            if (meta.getSaldo().signum() != 0) {
+                throw new NegocioException("La meta todavía tiene dinero reservado.");
+            }
+            try {
+                aporteRepo.borrarPorMetaYTipo(id, 'R');   
+                aporteRepo.borrarPorMetaYTipo(id, 'A');   
+            } catch (DataAccessException ex) {
+                throw traducir(ex);
+            }
         }
-        metaRepo.delete(meta);
+        metaRepo.deleteById(id);
     }
 
     @Transactional
@@ -192,7 +204,7 @@ public class MetaService {
             aporte.setMonto(cmd.monto());
             aporte.setFecha(cmd.fecha());
             aporte.setTipo('A');
-            aporteRepo.saveAndFlush(aporte);   //INSERT
+            aporteRepo.saveAndFlush(aporte);   
         } catch (DataAccessException ex) {
             throw traducir(ex);              
         }
@@ -226,7 +238,7 @@ public class MetaService {
             retiro.setMonto(cmd.monto());
             retiro.setFecha(cmd.fecha());
             retiro.setTipo('R');
-            aporteRepo.saveAndFlush(retiro);   //INSERT
+            aporteRepo.saveAndFlush(retiro);   
         } catch (DataAccessException ex) {
             throw traducir(ex);              
         }

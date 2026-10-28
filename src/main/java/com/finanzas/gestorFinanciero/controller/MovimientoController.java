@@ -6,15 +6,19 @@ package com.finanzas.gestorFinanciero.controller;
 
 import com.finanzas.gestorFinanciero.dto.MovimientoEditForm;
 import com.finanzas.gestorFinanciero.dto.security.UsuarioPrincipal;
+import com.finanzas.gestorFinanciero.model.Cuenta;
 import com.finanzas.gestorFinanciero.model.Gasto;
 import com.finanzas.gestorFinanciero.model.Ingreso;
 import com.finanzas.gestorFinanciero.model.Movimiento;
 import com.finanzas.gestorFinanciero.repository.CategoriaGastoRepository;
 import com.finanzas.gestorFinanciero.repository.CategoriaIngresoRepository;
+import com.finanzas.gestorFinanciero.repository.CuentaRepository;
 import com.finanzas.gestorFinanciero.repository.MovimientoRepository;
+import com.finanzas.gestorFinanciero.service.CuentaService;
 import com.finanzas.gestorFinanciero.service.MovimientoService;
 import com.finanzas.gestorFinanciero.service.NegocioException;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,17 +37,33 @@ public class MovimientoController {
     private final MovimientoService movimientoService;
     private final CategoriaGastoRepository catGastoRepo;
     private final CategoriaIngresoRepository catIngresoRepo;
+    private final CuentaRepository cuentaRepo;
+    private final CuentaService cuentaService;
 
-    public MovimientoController(MovimientoRepository movimientoRepo, MovimientoService movimientoService, CategoriaGastoRepository catGastoRepo, CategoriaIngresoRepository catIngresoRepo) {
+    public MovimientoController(MovimientoRepository movimientoRepo, MovimientoService movimientoService, CategoriaGastoRepository catGastoRepo, CategoriaIngresoRepository catIngresoRepo, CuentaRepository cuentaRepo, CuentaService cuentaService) {
         this.movimientoRepo = movimientoRepo;
         this.movimientoService = movimientoService;
         this.catGastoRepo = catGastoRepo;
         this.catIngresoRepo = catIngresoRepo;
+        this.cuentaRepo = cuentaRepo;
+        this.cuentaService = cuentaService;
     }
     
     @GetMapping
-    private String cargarLista(@AuthenticationPrincipal UsuarioPrincipal p, Model model) {
-        model.addAttribute("movimientos", movimientoRepo.listarPorCuenta(p.getCodCliente()));
+    private String cargarLista(@RequestParam(required=false) Long cuenta,
+                               @AuthenticationPrincipal UsuarioPrincipal p, Model model) {
+                
+        Cuenta seleccionada = (cuenta == null)
+            ? null
+            : cuentaService.buscarDelCliente(cuenta, p.getCodCliente()).orElse(null);
+
+        List<Movimiento> movimientos = (seleccionada == null)
+            ? movimientoRepo.listarPorCliente(p.getCodCliente())
+            : movimientoRepo.listarPorCuenta(seleccionada.getId());
+        
+        model.addAttribute("movimientos", movimientos);
+        model.addAttribute("cuentas", cuentaRepo.listarPorCliente(p.getCodCliente()));
+        model.addAttribute("cuentaSel", seleccionada);
         return "movimientos";
     }
     

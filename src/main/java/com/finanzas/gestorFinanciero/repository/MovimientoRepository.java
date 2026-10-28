@@ -16,6 +16,8 @@ import org.springframework.data.repository.query.Param;
 public interface MovimientoRepository extends JpaRepository<Movimiento,Long>{
     @Query("SELECT COUNT(m) > 0 FROM Movimiento m WHERE m.cuenta.id= :idCuenta")
     boolean existenMovimientosDeCuenta(@Param("idCuenta") Long idCuenta);
-    @Query("SELECT m FROM Movimiento m JOIN FETCH m.cuenta c WHERE m.cuenta.cliente.codCliente = :cod ORDER BY c.nombreCuenta")
+    @Query("SELECT m FROM Movimiento m JOIN FETCH m.cuenta c WHERE c.cliente.codCliente = :cod ORDER BY m.fecha DESC")
+    List<Movimiento> listarPorCliente(@Param("cod") Long cod);
+    @Query("SELECT m FROM Movimiento m JOIN FETCH m.cuenta c WHERE c.id = :cod ORDER BY m.fecha DESC")
     List<Movimiento> listarPorCuenta(@Param("cod") Long cod);
 }

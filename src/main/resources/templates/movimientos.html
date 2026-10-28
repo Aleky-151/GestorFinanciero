@@ -8,14 +8,30 @@
 <section>
     <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}"></div>
     <div class= "card">
-	<div class="card-header py-4 px-4">
-	    <h3 class="card-title" style="font-size:1.5rem">Historial de Movimientos</h3> 
-	    <div class="card-tools">
-        	<div class="dropdown">
-            	    <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
-                        data-toggle="dropdown" aria-expanded="false">
-                	    <i class="fas fa-plus"></i> Nuevo movimiento
-            	    </button>
+	<div class="card-header py-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h3 class="card-title float-none m-0" style="font-size:1.5rem">Historial de movimientos</h3>
+                <div th:if="${cuentaSel != null}" class="mt-1">
+                    <span class="text-muted" style="font-size:0.7rem">Saldo actual:</span>
+                    <p th:text="${'S/ ' + #numbers.formatDecimal(cuentaSel.saldo, 1, 2)}"></p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center ml-auto">
+                <form th:action="@{/movimientos}" method="get" class="form-inline mr-3 mb-0">
+                    <label class="mr-2 mb-0" for="cuenta">Cuenta</label>
+                    <select id="cuenta" name="cuenta" class="form-control form-control-sm"
+                            onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        <option th:each="c : ${cuentas}" th:value="${c.id}" th:text="${c.nombreCuenta}"
+                                th:selected="${cuentaSel != null and cuentaSel.id == c.id}"></option>
+                    </select>
+                </form>
+
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
+                            data-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-plus"></i> Nuevo movimiento
+                    </button>
                     <div class="dropdown-menu dropdown-menu-right">
                         <a class="dropdown-item" th:href="@{/gastos/nuevo}">
                             <i class="fas fa-minus-circle text-danger mr-2"></i> Nuevo gasto
@@ -25,22 +41,25 @@
                         </a>
                     </div>
                 </div>
-            </div>
+            </div>    
        </div>
+        
         <div class="card-body table-responsive p-0">
             <table class="table table-hover text-nowrap">
                 <thead>
-                    <tr><th>Cuenta</th><th>Movimiento</th><th class="text-center">Tipo</th><th class="text-center">Fecha</th><th class="text-right">Monto</th></tr>
+                    <tr><th>Cuenta</th><th>Movimiento</th><th class="text-center">Fecha</th><th class="text-right">Monto</th></tr>
                 </thead>
                 <tbody>
                         <tr th:each="m : ${movimientos}">
                         <td th:text="${m.cuenta.nombreCuenta}"></td>
                         <td th:text="${m.descripcion}"></td>
-                        <td class="text-center"><span class="badge badge-info" th:text="${m instanceof T(com.finanzas.gestorFinanciero.model.Ingreso)} ? 'Ingreso' : 'Gasto'"></span></td>
-                        <td class="text-center" th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>            
-                        <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(m.monto, 1, 2)}"></td>
+                        <td class="text-center" th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>
+                        <td class="text-right"
+                            th:with="esIngreso=${m instanceof T(com.finanzas.gestorFinanciero.model.Ingreso)}"
+                            th:classappend="${esIngreso} ? 'text-success' : 'text-danger'"
+                            th:text="${(esIngreso ? '+ S/ ' : '- S/ ') + #numbers.formatDecimal(m.monto, 1, 2)}"></td>                        
                         <td class="text-right">
-                            <a th:href="@{/movimientos/{id}/editar(id=${m.id})}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <a th:href="@{/movimientos/{id}/editar(id=${m.id})}" class="btn btn-sm btn-outline-secondary">Editar</a>
                             <form th:action="@{/movimientos/{id}/eliminar(id=${m.id})}" method="post" class="d-inline"
                                 onsubmit="return confirm('¿Eliminar este movimiento? Se ajustará el saldo de la cuenta.')">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>

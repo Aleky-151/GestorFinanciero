@@ -10,7 +10,6 @@ import com.finanzas.gestorFinanciero.model.Categorias.*;
 import com.finanzas.gestorFinanciero.repository.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,12 +59,6 @@ public class MovimientoService {
         cuentaRepo.save(cuenta);
         return gastoRepo.save(gasto);
     }
-
-    @Transactional
-    public void EliminarMovimiento(Long idMovimiento){
-        Optional<Movimiento> movimiento= movimientoRepo.findById(idMovimiento);
-        
-    }
     
     @Transactional
     public Ingreso registrarIngreso(Long idCliente,
@@ -88,7 +81,8 @@ public class MovimientoService {
         cuentaRepo.save(cuenta);
         return ingresoRepo.save(ingreso);
     }
-
+    
+    @Transactional(readOnly = true)
     private void validarMonto(BigDecimal monto) {
         if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new NegocioException("El monto debe ser mayor a 0");
@@ -96,10 +90,12 @@ public class MovimientoService {
     }
     
     // Efecto del movimiento sobre el saldo
+    @Transactional(readOnly = true)
     private BigDecimal efecto(Movimiento m) {
         return (m instanceof Ingreso) ? m.getMonto() : m.getMonto().negate();
     }
     
+    @Transactional(readOnly = true)
     private Movimiento movimientoDelCliente(Long id, Long codCliente) {
         Movimiento m = movimientoRepo.findById(id)
                 .orElseThrow(() -> new NegocioException("El movimiento no existe"));

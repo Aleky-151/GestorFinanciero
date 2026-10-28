@@ -77,6 +77,26 @@ CREATE TABLE cuentas (
 CREATE INDEX ix_cuentas_cliente   ON cuentas (cod_cliente)  TABLESPACE ts_finanzas;
 CREATE INDEX ix_cuentas_categoria ON cuentas (id_categoria) TABLESPACE ts_finanzas;
 
+-- ---------- TRANSFERENCIAS --------
+CREATE TABLE transferencias (
+    id_transferencia    NUMBER GENERATED ALWAYS AS IDENTITY,
+    monto               NUMBER(12,2) NOT NULL,
+    fecha               DATE DEFAULT SYSDATE NOT NULL,
+    id_cuentaog         NUMBER NOT NULL,
+    id_cuentades        NUMBER NOT NULL,
+    CONSTRAINT pk_transferencias PRIMARY KEY (id_transferencia)
+        USING INDEX TABLESPACE ts_finanzas,
+    CONSTRAINT fk_transferencias_cuentaog FOREIGN KEY (id_cuentaog)
+        REFERENCES cuentas (id_cuenta),
+    CONSTRAINT fk_transferencias_cuentades FOREIGN KEY (id_cuentades)
+        REFERENCES cuentas (id_cuenta),
+    CONSTRAINT ck_transferencias_monto CHECK (monto > 0)
+) TABLESPACE ts_finanzas;
+
+CREATE INDEX ix_transferencias_cuentaOg ON transferencias (id_cuentaog) TABLESPACE ts_finanzas;
+CREATE INDEX ix_transferencias_cuentaDes ON transferencias (id_cuentades) TABLESPACE ts_finanzas;
+CREATE INDEX ix_transferencias_fecha  ON transferencias (fecha)  TABLESPACE ts_finanzas;
+
 -- ---------- MOVIMIENTOS ----------
 
 CREATE TABLE movimientos (
@@ -162,7 +182,7 @@ CREATE TABLE opciones (
 CREATE INDEX ix_opciones_ref ON opciones (id_opcion_ref) TABLESPACE ts_finanzas;
 
 INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Cuentas', '/cuentas', 'fas fa-piggy-bank', 10);
-INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Movimientos', '/movimientos', 'fas fa-exchange-alt', 20);
-INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Metas Financieras', '/metas', 'fas fa-bullseye', 30);
-
+INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Movimientos', '/movimientos', 'fas fa-money-bill-wave', 20);
+INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Transferencias', '/transferencias', 'fas fa-sync-alt', 30);
+INSERT INTO opciones (nombre_opcion, url_opcion, icono, orden) VALUES ('Metas Financieras', '/metas', 'fas fa-bullseye',40);
 COMMIT;

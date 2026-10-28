@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Mis transferencias</title>
+</head>
+<body>
+<section>
+    <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card">
+        <div class="card-header py-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="card-title float-none m-0" style="font-size:1.5rem">Historial de transferencias</h3>
+            <a th:href="@{/transferencias/nuevo}" class="btn btn-primary btn-sm ml-auto">
+                <i class="fas fa-plus"></i> Nueva transferencia
+            </a>
+        </div>
+
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap">
+                <thead>
+                <tr>
+                    <th>Cuenta origen</th>
+                    <th>Cuenta destino</th>
+                    <th class="text-center">Fecha</th>
+                    <th class="text-right">Monto</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${transferencias}">
+                    <td th:text="${t.cuentaOg.nombreCuenta}"></td>
+                    <td th:text="${t.cuentaDes.nombreCuenta}"></td>
+                    <td class="text-center" th:text="${#temporals.format(t.fecha, 'dd/MM/yyyy')}"></td>
+                    <td class="text-right" th:text="${'S/ ' + #numbers.formatDecimal(t.monto, 1, 2)}"></td>
+                    <td class="text-right">
+                        <a th:href="@{/transferencias/{id}/editar(id=${t.id})}"
+                           class="btn btn-sm btn-outline-secondary">Editar</a>
+                        <form th:action="@{/transferencias/{id}/deshacer(id=${t.id})}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('¿Deshacer esta transferencia? Se revertirán los saldos de las cuentas.')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Deshacer</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(transferencias)}">
+                    <td colspan="5" class="text-center text-muted py-4">Aún no hay transferencias registradas.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>
