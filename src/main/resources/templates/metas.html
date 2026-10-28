@@ -65,7 +65,9 @@
                             </form>                            
                         </td>
                     </tr>
-                </tbody>
+                    <tr th:if="${#lists.isEmpty(transferencias)}">
+                        <td colspan="5" class="text-center text-muted py-4">Aún no hay metas registradas.</td>
+                    </tr>                </tbody>
             </table>
 	</div>
     </div>

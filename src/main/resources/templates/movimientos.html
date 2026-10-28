@@ -66,6 +66,9 @@
                             </form>
                         </td>
                     </tr>
+                    <tr th:if="${#lists.isEmpty(movimientos)}">
+                        <td colspan="5" class="text-center text-muted py-4">Aún no hay movimientos registrados.</td>
+                    </tr>
                 </tbody>
             </table>
 	</div>
