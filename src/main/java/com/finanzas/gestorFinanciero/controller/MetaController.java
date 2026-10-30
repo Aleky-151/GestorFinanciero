@@ -5,10 +5,13 @@
 package com.finanzas.gestorFinanciero.controller;
 
 import com.finanzas.gestorFinanciero.dto.AporteForm;
+import com.finanzas.gestorFinanciero.dto.MetaFila;
 import com.finanzas.gestorFinanciero.dto.MetaForm;
 import com.finanzas.gestorFinanciero.dto.security.UsuarioPrincipal;
+import com.finanzas.gestorFinanciero.model.Categorias.EstadoMeta;
 import com.finanzas.gestorFinanciero.model.Meta;
 import com.finanzas.gestorFinanciero.repository.CuentaRepository;
+import com.finanzas.gestorFinanciero.repository.EstadoMetaRepository;
 import com.finanzas.gestorFinanciero.repository.MetaRepository;
 import com.finanzas.gestorFinanciero.repository.TipoMetaRepository;
 import com.finanzas.gestorFinanciero.service.AporteCommand;
@@ -16,6 +19,7 @@ import com.finanzas.gestorFinanciero.service.MetaService;
 import com.finanzas.gestorFinanciero.service.NegocioException;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,20 +35,35 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/metas")
 public class MetaController {
     private final MetaRepository metaRepo;
-    private final TipoMetaRepository tipoMetaRepo;
+    private final TipoMetaRepository tipoRepo;
+    private final EstadoMetaRepository estadoRepo;
     private final MetaService metaService;
     private final CuentaRepository cuentaRepo;
 
-    public MetaController(MetaRepository metaRepo, TipoMetaRepository tipoMetaRepo, MetaService metaService, CuentaRepository cuentaRepo) {
+    public MetaController(MetaRepository metaRepo, TipoMetaRepository tipoRepo, EstadoMetaRepository estadoRepo, MetaService metaService, CuentaRepository cuentaRepo) {
         this.metaRepo = metaRepo;
-        this.tipoMetaRepo = tipoMetaRepo;
+        this.tipoRepo = tipoRepo;
+        this.estadoRepo = estadoRepo;
         this.metaService = metaService;
         this.cuentaRepo = cuentaRepo;
     }
     
     @GetMapping
-    private String listar(@AuthenticationPrincipal UsuarioPrincipal p, Model model) {
-        model.addAttribute("metas", metaService.listar(p.getCodCliente()));
+    private String listar(@RequestParam(required=false) Long estado,
+                            @AuthenticationPrincipal UsuarioPrincipal p, Model model) {
+        
+        EstadoMeta seleccionado = (estado == null)
+            ? null
+            : estadoRepo.findById(estado).orElse(null);
+
+        List<MetaFila> metas = (seleccionado == null)
+            ? metaService.listar(p.getCodCliente())
+            : metaService.listarPorEstado(p.getCodCliente(), estado);
+
+        model.addAttribute("estados", estadoRepo.findAll());
+        model.addAttribute("estadoSel", seleccionado);        
+        model.addAttribute("metas", metas);
+        model.addAttribute("cuentas", cuentaRepo.listarPorCliente(p.getCodCliente()));
         return "metas";
     }
     
@@ -63,10 +82,10 @@ public class MetaController {
         if (!result.hasErrors()) {
             try {
                 metaService.crear(form, p.getCodCliente());
-                ra.addFlashAttribute("mensaje", "Meta registrada ✅");
+                ra.addFlashAttribute("mensaje", "Se registró la meta exitosamente");
                 return "redirect:/metas";
             } catch (NegocioException e) {
-                result.reject("negocio", e.getMessage());   // error general del formulario
+                result.reject("negocio", e.getMessage());   
             }
         }
         cargarTipos(model);
@@ -78,19 +97,20 @@ public class MetaController {
                            RedirectAttributes ra) {
         try {
             metaService.eliminar(id, p.getCodCliente());
-            ra.addFlashAttribute("mensaje", "Meta eliminada ✅");
+            ra.addFlashAttribute("mensaje", "Se eliminó la meta exitosamente");
         } catch (NegocioException e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/metas";
     }
     
-    @PostMapping("/{id}/cancelar")
-    public String cancelar(@PathVariable Long id, @AuthenticationPrincipal UsuarioPrincipal p,
+    @PostMapping("/{id}/anular")
+    public String anular(@PathVariable Long id, @RequestParam(required = false) Long idCuenta, 
+                           @AuthenticationPrincipal UsuarioPrincipal p,
                            RedirectAttributes ra) {
         try {
-            metaService.cancelar(id, p.getCodCliente());
-            ra.addFlashAttribute("mensaje", "Meta cancelada ✅");
+            metaService.anular(id, idCuenta, p.getCodCliente());
+            ra.addFlashAttribute("mensaje", "Se anuló la meta exitosamente. Revise la devolución del saldo en sus cuentas");
         } catch (NegocioException e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -126,13 +146,12 @@ public class MetaController {
         if (!result.hasErrors()) {
             try {
                 metaService.actualizar(id, form, p.getCodCliente());
-                ra.addFlashAttribute("mensaje", "Meta actualizada ✅");
+                ra.addFlashAttribute("mensaje", "Se actualizó la meta exitosamente");
                 return "redirect:/metas";
             } catch (NegocioException e) {
                 result.reject("negocio", e.getMessage());
             }
         }
-        Meta m = metaService.obtener(id, p.getCodCliente());
         cargarTipos(model);
         return "meta-form";
     }
@@ -194,7 +213,7 @@ public class MetaController {
     }
     
     private void cargarTipos(Model model) {
-        model.addAttribute("tipos", tipoMetaRepo.findAll());
+        model.addAttribute("tipos", tipoRepo.findAll());
     }
     
     private void cargarListas(Model model, UsuarioPrincipal p){

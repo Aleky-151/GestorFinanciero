@@ -39,7 +39,9 @@
                         <form th:action="@{/transferencias/{id}/deshacer(id=${t.id})}"
                               method="post" class="d-inline"
                               onsubmit="return confirm('¿Deshacer esta transferencia? Se revertirán los saldos de las cuentas.')">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Deshacer</button>
+                                <button class="btn btn-sm btn-outline-danger" title="Deshacer transferencia">
+                                    <i class="fa fa-undo" aria-hidden="true"></i>
+                                </button>                        
                         </form>
                     </td>
                 </tr>

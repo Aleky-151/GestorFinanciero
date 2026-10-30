@@ -13,7 +13,6 @@ import com.finanzas.gestorFinanciero.repository.ClienteRepository;
 import com.finanzas.gestorFinanciero.repository.CuentaRepository;
 import com.finanzas.gestorFinanciero.repository.MovimientoRepository;
 import java.math.BigDecimal;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,13 +73,18 @@ public class CuentaService {
     
     @Transactional(readOnly = true)
     public Cuenta cuentaDelCliente(Long idCuenta, Long codCliente) {
-        return buscarDelCliente(idCuenta, codCliente)
-            .orElseThrow(() -> new NegocioException("La cuenta no existe"));
+        Cuenta c= buscarDelCliente(idCuenta, codCliente);
+        if(c==null) throw new NegocioException("La cuenta no existe");
+        return c;
     }
     
     @Transactional(readOnly = true)
-    public Optional<Cuenta> buscarDelCliente(Long idCuenta, Long codCliente) {
-        return cuentaRepo.findById(idCuenta)
-                .filter(c -> c.getCliente().getCodCliente().equals(codCliente));
+    public Cuenta buscarDelCliente(Long idCuenta, Long codCliente) {
+        Cuenta c= cuentaRepo.findByIdWithLock(idCuenta)
+                .orElseThrow(()-> new NegocioException("La cuenta no existe"));
+        
+        Long idCliente= c.getCliente().getCodCliente();
+        if(idCliente.equals(codCliente)) return c; 
+        else return null;
     }
 }

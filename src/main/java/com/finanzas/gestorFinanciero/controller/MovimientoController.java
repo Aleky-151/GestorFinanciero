@@ -55,7 +55,7 @@ public class MovimientoController {
                 
         Cuenta seleccionada = (cuenta == null)
             ? null
-            : cuentaService.buscarDelCliente(cuenta, p.getCodCliente()).orElse(null);
+            : cuentaService.buscarDelCliente(cuenta, p.getCodCliente());
 
         List<Movimiento> movimientos = (seleccionada == null)
             ? movimientoRepo.listarPorCliente(p.getCodCliente())

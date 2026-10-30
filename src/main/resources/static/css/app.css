@@ -20,3 +20,9 @@
     font-weight: 600;
     flex-shrink: 0;
 }
+
+.barra-filtros {
+    padding: .75rem 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+}

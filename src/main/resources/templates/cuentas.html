@@ -32,7 +32,9 @@
                             <a th:href="@{/cuentas/{id}/editar(id=${c.id})}" class="btn btn-sm btn-outline-secondary">Editar</a>
                             <form th:action="@{/cuentas/{id}/eliminar(id=${c.id})}" method="post" class="d-inline"
                                   onsubmit="return confirm('¿Eliminar esta cuenta?')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                <button class="btn btn-sm btn-outline-danger" title="Eliminar cuenta">
+                                    <i class="fa fa-trash"></i>
+                                </button>                            
                             </form>
                         </td>
                     </tr>

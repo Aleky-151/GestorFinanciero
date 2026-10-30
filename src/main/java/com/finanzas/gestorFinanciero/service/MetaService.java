@@ -7,24 +7,22 @@ package com.finanzas.gestorFinanciero.service;
 import com.finanzas.gestorFinanciero.dto.MetaFila;
 import com.finanzas.gestorFinanciero.dto.MetaForm;
 import com.finanzas.gestorFinanciero.model.AporteMeta;
+import com.finanzas.gestorFinanciero.model.Categorias.EstadoMeta;
 import com.finanzas.gestorFinanciero.model.Categorias.TipoMeta;
 import com.finanzas.gestorFinanciero.model.Cliente;
 import com.finanzas.gestorFinanciero.model.Cuenta;
 import com.finanzas.gestorFinanciero.model.Meta;
-import com.finanzas.gestorFinanciero.repository.AporteMetaRepository;
-import com.finanzas.gestorFinanciero.repository.ClienteRepository;
-import com.finanzas.gestorFinanciero.repository.CuentaRepository;
-import com.finanzas.gestorFinanciero.repository.EstadoMetaRepository;
-import com.finanzas.gestorFinanciero.repository.MetaRepository;
-import com.finanzas.gestorFinanciero.repository.TipoMetaRepository;
+import com.finanzas.gestorFinanciero.repository.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class MetaService {
+    @Autowired
     private final MetaRepository metaRepo;
     private final TipoMetaRepository tipoMetaRepo;
     private final EstadoMetaRepository estadoMetaRepo;
@@ -43,7 +42,12 @@ public class MetaService {
     private final CuentaRepository cuentaRepo;
     private final CuentaService cuentaService;
     private static final Long ESTADO_PROGRESO = 1L;
-    private static final Long ESTADO_CANCELADA = 4L;
+    private static final Long ESTADO_COMPLETADA = 2L;
+    private static final Long ESTADO_VENCIDA= 3L;
+    private static final Long ESTADO_ANULADA = 4L;
+    //Vencimiento de metas
+    @PersistenceContext
+    private EntityManager em;
 
     public MetaService(MetaRepository metaRepo, TipoMetaRepository tipoMetaRepo, EstadoMetaRepository estadoMetaRepo, ClienteRepository clienteRepo, AporteMetaRepository aporteRepo, CuentaRepository cuentaRepo, CuentaService cuentaService) {
         this.metaRepo = metaRepo;
@@ -58,33 +62,51 @@ public class MetaService {
     @Transactional(readOnly = true)
     public List<MetaFila> listar(Long codCliente) {
         Set<Long> conAportes = aporteRepo.idsMetasConAportes(codCliente);
+        Set<Long> saldoRetirado = metaRepo.idsMetasConSaldoRetirado(codCliente);
         return metaRepo.listarPorCliente(codCliente).stream()
-                .map(m -> new MetaFila(m, conAportes.contains(m.getId())))
+                .map(m -> new MetaFila(m, conAportes.contains(m.getId()), saldoRetirado.contains(m.getId())))
                 .toList();
     }
 
     @Transactional(readOnly = true)
+    public List<MetaFila> listarPorEstado(Long codCliente, Long idEstado) {
+        Set<Long> conAportes = aporteRepo.idsMetasConAportes(codCliente);
+        Set<Long> saldoRetirado = metaRepo.idsMetasConSaldoRetirado(codCliente);
+        return metaRepo.listarPorClienteYEstado(codCliente, idEstado).stream()
+                .map(m -> new MetaFila(m, conAportes.contains(m.getId()), saldoRetirado.contains(m.getId())))
+                .toList();
+    }
+    
+    @Transactional(readOnly = true)
     public List<Meta> listarAportables(Long codCliente) {
-        LocalDate hoy = LocalDate.now();
         return metaRepo.listarPorClienteYEstado(codCliente, ESTADO_PROGRESO).stream()
-                .filter(m -> !m.getFechaLimite().isBefore(hoy))   
+                .filter(m -> !m.getFechaLimite().isBefore(hoy()))   
                 .toList();
     }
     
     @Transactional(readOnly = true)
     public List<Meta> listarRetirables(Long codCliente) {
         return metaRepo.listarPorCliente(codCliente).stream()
-                .filter(m -> m.getEstado().getId()!= ESTADO_CANCELADA)
+                .filter(m -> !Objects.equals(m.getEstado().getId(), ESTADO_ANULADA))
                 .toList();
     }
         
     @Transactional
     public Meta crear(MetaForm form, Long codCliente) {
-        TipoMeta tipoMeta= tipoMetaRepo.findById(form.getIdTipo())
-                .orElseThrow(()->new NegocioException("El tipo no existe"));
-        
         Cliente cliente= clienteRepo.findById(codCliente)
                 .orElseThrow(()-> new NegocioException("El cliente no existe"));
+        
+        TipoMeta tipoMeta= tipoMetaRepo.findById(form.getIdTipo())
+                .orElseThrow(()->new NegocioException("El tipo de meta no existe"));
+        
+        EstadoMeta estadoMeta= estadoMetaRepo.findById(ESTADO_PROGRESO)
+                .orElseThrow(() -> new NegocioException("Estado no encontrado"));
+        
+        validarMonto(form.getMontoObjetivo());
+        
+        if (form.getFechaLimite() == null || !form.getFechaLimite().isAfter(hoy())) {
+            throw new NegocioException("La fecha límite debe ser posterior a hoy.");
+        }
         
         try{        
             Meta meta= new Meta();
@@ -94,7 +116,7 @@ public class MetaService {
             meta.setFechaLimite(form.getFechaLimite());
             meta.setTipo(tipoMeta);
             meta.setSaldo(BigDecimal.ZERO);
-            meta.setEstado(estadoMetaRepo.findByEstado("EN_PROGRESO"));
+            meta.setEstado(estadoMeta);
             return metaRepo.save(meta);        
         } catch (DataAccessException ex) {
             throw traducir(ex);              
@@ -106,12 +128,10 @@ public class MetaService {
         Meta meta = metaDelCliente(id, codCliente);
 
         if (aporteRepo.existsByMetaId(id)) {
-            if (meta.getEstado().getId() != ESTADO_CANCELADA) {  
-                throw new NegocioException("No se puede eliminar una meta con aportes. Opte por cancelarla.");
-            }
             if (meta.getSaldo().signum() != 0) {
-                throw new NegocioException("La meta todavía tiene dinero reservado.");
+                throw new NegocioException("La meta todavía tiene dinero reservado. Anule la meta o retire el saldo manualmente");
             }
+            
             try {
                 aporteRepo.borrarPorMetaYTipo(id, 'R');   
                 aporteRepo.borrarPorMetaYTipo(id, 'A');   
@@ -123,54 +143,62 @@ public class MetaService {
     }
 
     @Transactional
-    public Meta cancelar(Long id, Long codCliente) {
+    public void anular(Long id, Long idCuenta, Long codCliente) {
         Meta meta = metaDelCliente(id, codCliente);
-        if (!"EN_PROGRESO".equals(meta.getEstado().getEstado())) {
-            throw new NegocioException("Solo se pueden cancelar metas en progreso");
-        }
+        Long estadoId = meta.getEstado().getId();
         
-        // neto por cuenta: aportes (A) menos devoluciones previas (R)
-        Map<Cuenta, BigDecimal> porCuenta = new HashMap<>();
-        for (AporteMeta a : aporteRepo.findByMetaId(id)) {
-            BigDecimal signo = a.getTipo() == 'A' ? a.getMonto() : a.getMonto().negate();
-            porCuenta.merge(a.getCuenta(), signo, BigDecimal::add);
+        if (!Objects.equals(estadoId, ESTADO_PROGRESO) && !Objects.equals(estadoId, ESTADO_VENCIDA)){
+            throw new NegocioException("Solo se pueden anular metas en progreso o vencidas");
         }
 
-        porCuenta.forEach((cuenta, monto) -> {
-            if (monto.signum() > 0) {
-                cuenta.setSaldo(cuenta.getSaldo().add(monto));
-                cuentaRepo.save(cuenta);
-
-                AporteMeta r = new AporteMeta();
-                r.setMeta(meta);
-                r.setCuenta(cuenta);
-                r.setMonto(monto);
-                r.setTipo('R');
-                r.setFecha(LocalDate.now());
-                aporteRepo.save(r);
+        if (meta.getSaldo().signum() > 0) {
+            if (idCuenta == null) {
+                throw new NegocioException("Elige la cuenta donde se devolverá el dinero");
             }
-        });
+            retirar(new AporteCommand(id, idCuenta, meta.getSaldo(), LocalDate.now()), codCliente);
+        }
 
-        meta.setEstado(estadoMetaRepo.findByEstado("CANCELADA"));
-        return metaRepo.save(meta);
-    }
-
+        meta.setEstado(estadoMetaRepo.findById(ESTADO_ANULADA)
+                .orElseThrow(() -> new NegocioException("Estado no encontrado")));
+        
+        metaRepo.save(meta);
+    }    
+    
+    @Transactional (readOnly=true)
     public Meta obtener(Long id, Long codCliente) {
         return metaDelCliente(id, codCliente);
     }
 
     @Transactional
     public Meta actualizar(Long id, MetaForm form, Long codCliente) {
+        Meta m= metaDelCliente(id,codCliente);
+        validarMonto(form.getMontoObjetivo());
+        
+        LocalDate fechaLimite = (form.getFechaLimite().isAfter(hoy())) ? form.getFechaLimite() : null ;
+        
         TipoMeta tipoMeta= tipoMetaRepo.findById(form.getIdTipo())
-                .orElseThrow(()->new NegocioException("El tipo no existe"));
+                .orElseThrow(()->new NegocioException("El tipo de meta no existe."));
+        
+        if (fechaLimite==null) throw new NegocioException("La fecha limite debe ser posterior a hoy.");
+        
+        if (form.getMontoObjetivo().compareTo(m.getSaldo()) < 0) {
+            throw new NegocioException("El monto objetivo no puede ser menor al saldo ya reservado (S/ "
+                    + m.getSaldo() + ").");
+        }
+        
+        if (!Objects.equals(m.getEstado().getId(), ESTADO_COMPLETADA)){
+            Long nuevo = (m.getSaldo().compareTo(form.getMontoObjetivo()) >= 0)
+                    ? ESTADO_COMPLETADA : ESTADO_PROGRESO;
+            m.setEstado(estadoMetaRepo.findById(nuevo)
+                    .orElseThrow(() -> new NegocioException("Estado no encontrado")));
+        }
         
         try{
-            Meta m= metaDelCliente(id,codCliente);
             m.setFechaLimite(form.getFechaLimite());
             m.setMontoObjetivo(form.getMontoObjetivo());
             m.setNombreMeta(form.getNombreMeta());
-            m.setTipo(tipoMeta);    
-            return metaRepo.save(m);
+            m.setTipo(tipoMeta);  
+            return metaRepo.saveAndFlush(m);
         } catch (DataAccessException ex){
             throw traducir(ex);
         }
@@ -194,10 +222,24 @@ public class MetaService {
             throw new NegocioException("No se puede aportar a una meta vencida");
         }
         
+        BigDecimal nuevoSaldoMeta= meta.getSaldo().add(cmd.monto());
+        
+        if (meta.getMontoObjetivo().compareTo(nuevoSaldoMeta) < 0) {
+            BigDecimal exceso= nuevoSaldoMeta.subtract(meta.getMontoObjetivo());
+            throw new NegocioException("El saldo acumulado no puede superar al monto objetivo. Exceso: " + exceso);
+        }        
+        
         try {
             cuenta.setSaldo(cuenta.getSaldo().subtract(cmd.monto()));
             cuentaRepo.save(cuenta);
-
+            
+            meta.setSaldo(nuevoSaldoMeta);
+            if (nuevoSaldoMeta.compareTo(meta.getMontoObjetivo()) == 0) {
+                meta.setEstado(estadoMetaRepo.findById(ESTADO_COMPLETADA)
+                        .orElseThrow(() -> new NegocioException("Estado no encontrado")));
+            }            
+            metaRepo.save(meta);
+            
             AporteMeta aporte = new AporteMeta();
             aporte.setMeta(meta);
             aporte.setCuenta(cuenta);
@@ -216,22 +258,28 @@ public class MetaService {
 
         Meta meta = metaDelCliente(cmd.idMeta(), codCliente);
         
-        if (Objects.equals(meta.getEstado().getId(), ESTADO_CANCELADA)) {
+        if (Objects.equals(meta.getEstado().getId(), ESTADO_ANULADA)) {
             throw new NegocioException("No se puede retirar de una meta cancelada");
         }
-        if (meta.getSaldo()== BigDecimal.ZERO) {
+        
+        if (meta.getSaldo().signum() <= 0) {            
             throw new NegocioException("No hay saldo por retirar en la meta");
-        }
+        }    
         
         if (meta.getSaldo().compareTo(cmd.monto()) < 0) {
             throw new NegocioException("La meta solo tiene S/ " + meta.getSaldo() + " disponible");
         }
         
+        BigDecimal nuevoSaldoMeta= meta.getSaldo().subtract(cmd.monto());
+        
         Cuenta cuenta = cuentaService.cuentaDelCliente(cmd.idCuenta(), codCliente);
         try {
             cuenta.setSaldo(cuenta.getSaldo().add(cmd.monto()));
             cuentaRepo.save(cuenta);
-
+            
+            meta.setSaldo(nuevoSaldoMeta);
+            metaRepo.save(meta);
+            
             AporteMeta retiro = new AporteMeta();
             retiro.setMeta(meta);
             retiro.setCuenta(cuenta);
@@ -244,12 +292,17 @@ public class MetaService {
         }
     }
     
+    @Transactional
+    public void vencerMetas() {
+        em.createNativeQuery("BEGIN sp_vencer_metas; END;").executeUpdate();
+    }
+    
     private void validarMonto(BigDecimal monto) {
         if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new NegocioException("El monto debe ser mayor a 0");
         }
     }
-
+    
     private NegocioException traducir(DataAccessException ex) {
         Throwable t = ex.getMostSpecificCause();
         if (t instanceof SQLException sql && sql.getErrorCode() >= 20000 && sql.getErrorCode() <= 20999) {
@@ -258,13 +311,15 @@ public class MetaService {
         }
         throw ex;
     }
-
+    
     private Meta metaDelCliente(Long id, Long codCliente) {
-        Meta m= metaRepo.findById(id)
-                .orElseThrow(()-> new NegocioException("La meta no existe"));
+        Meta m= metaRepo.findByIdWithLock(id)
+                .orElseThrow(()->new NegocioException("La meta no existe"));
         if(!m.getCliente().getCodCliente().equals(codCliente)){
             throw new NegocioException("La meta no existe");
         }
         return m;
     }
+
+    private LocalDate hoy() { return LocalDate.now(ZoneId.of("America/Lima")); }
 }

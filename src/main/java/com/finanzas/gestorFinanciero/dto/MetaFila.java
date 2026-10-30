@@ -10,4 +10,4 @@ import com.finanzas.gestorFinanciero.model.Meta;
  *
  * @author adris
  */
-public record MetaFila(Meta meta, boolean tieneAportes) {}
+public record MetaFila(Meta meta, boolean tieneAportes, boolean saldoRetirado) {}

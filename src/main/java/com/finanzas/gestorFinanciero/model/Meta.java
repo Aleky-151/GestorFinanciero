@@ -30,7 +30,7 @@ public class Meta {
     @Column(name="monto_objetivo", nullable=false)
     private BigDecimal montoObjetivo;
     
-    @Column(name="saldo", nullable=false, updatable=false)
+    @Column(name="saldo", nullable=false)
     private BigDecimal saldo;
     
     @Column(name="fecha_limite", nullable=false)

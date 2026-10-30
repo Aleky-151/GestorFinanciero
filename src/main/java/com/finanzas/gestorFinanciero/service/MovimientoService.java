@@ -99,7 +99,6 @@ public class MovimientoService {
     private Movimiento movimientoDelCliente(Long id, Long codCliente) {
         Movimiento m = movimientoRepo.findById(id)
                 .orElseThrow(() -> new NegocioException("El movimiento no existe"));
-        // valida que la cuenta del movimiento sea de la usuaria
         cuentaServ.cuentaDelCliente(m.getCuenta().getId(), codCliente);
         return m;
     }
