@@ -58,22 +58,6 @@ CREATE TABLE metas(
 CREATE INDEX ix_metas_tipo ON metas (id_tipo) TABLESPACE ts_finanzas;
 CREATE INDEX ix_metas_estado ON metas (id_estado) TABLESPACE ts_finanzas;
 CREATE INDEX ix_metas_cliente ON metas (cod_cliente) TABLESPACE ts_finanzas;
-
---Trigger de validacion de fecha limite
-CREATE OR REPLACE TRIGGER trg_valida_fecha_meta
-BEFORE INSERT OR UPDATE ON metas
-FOR EACH ROW
-BEGIN
-    IF INSERTING
-       OR :OLD.fecha_limite IS NULL
-       OR :NEW.fecha_limite <> :OLD.fecha_limite THEN
-        IF :NEW.fecha_limite <= TRUNC(SYSDATE) THEN
-            RAISE_APPLICATION_ERROR(-20001,
-                'La fecha límite de la meta debe ser mayor al día de hoy.');
-        END IF;
-    END IF;
-END;
-/
 -- --------------- APORTES -------------------
 
 CREATE TABLE aportes_meta(
@@ -91,66 +75,8 @@ CREATE TABLE aportes_meta(
 )TABLESPACE ts_finanzas;
 
 CREATE INDEX ix_aportes_meta_meta ON aportes_meta (id_meta) TABLESPACE ts_finanzas;
-CREATE INDEX ix_aportes_meta_cuenta ON aportes_meta (id_cuentaOg) TABLESPACE ts_finanzas;
+CREATE INDEX ix_aportes_meta_cuenta ON aportes_meta (id_cuenta) TABLESPACE ts_finanzas;
 
 ALTER TABLE aportes_meta ADD tipo CHAR(1) DEFAULT 'A' NOT NULL;
 ALTER TABLE aportes_meta ADD CONSTRAINT ck_aportes_tipo CHECK (tipo IN ('A', 'R'));  -- A = aporte, R = retiro/devolución
-
---Validaciones de aportes
-CREATE OR REPLACE TRIGGER trg_valida_fecha_aportes_meta
-BEFORE INSERT OR UPDATE ON aportes_meta
-FOR EACH ROW
-DECLARE
-    vf_limite DATE;
-BEGIN
-    IF :NEW.tipo = 'A' THEN
-        SELECT fecha_limite INTO vf_limite
-        FROM metas WHERE id_meta = :NEW.id_meta;
-
-        IF :NEW.fecha > vf_limite THEN
-            RAISE_APPLICATION_ERROR(-20002,
-                'No se pueden registrar aportes después de la fecha límite.');
-        END IF;
-    END IF;
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN NULL;   
-END;
-
---Actualizacion de saldo
-CREATE OR REPLACE TRIGGER trg_actualiza_saldo_meta
-AFTER INSERT OR UPDATE OR DELETE ON aportes_meta
-FOR EACH ROW
-DECLARE
-    vid_meta  NUMBER;
-    vdelta    NUMBER := 0;
-    vobjetivo metas.monto_objetivo%TYPE;
-    vsaldo    metas.saldo%TYPE;
-BEGIN
-    IF INSERTING THEN
-        vid_meta := :NEW.id_meta;
-        vdelta   := CASE :NEW.tipo WHEN 'A' THEN :NEW.monto ELSE -:NEW.monto END;
-    ELSIF UPDATING THEN
-        vid_meta := :NEW.id_meta;
-        vdelta   := CASE :NEW.tipo WHEN 'A' THEN :NEW.monto ELSE -:NEW.monto END
-                   - CASE :OLD.tipo WHEN 'A' THEN :OLD.monto ELSE -:OLD.monto END;
-    ELSE
-        vid_meta := :OLD.id_meta;
-        vdelta   := -(CASE :OLD.tipo WHEN 'A' THEN :OLD.monto ELSE -:OLD.monto END);
-    END IF;
-
-    SELECT monto_objetivo, saldo INTO vobjetivo, vsaldo
-    FROM metas WHERE id_meta = vid_meta FOR UPDATE;
-
-    IF vsaldo + vdelta > vobjetivo THEN
-        RAISE_APPLICATION_ERROR(-20003, 'El aporte excede el monto objetivo restante.');
-    END IF;
-
-    UPDATE metas
-    SET saldo = saldo + vdelta,
-        id_estado = CASE
-                      WHEN id_estado IN (1, 2) THEN
-                          CASE WHEN saldo + vdelta >= monto_objetivo THEN 2 ELSE 1 END
-                      ELSE id_estado         
-                    END
-    WHERE id_meta = vid_meta;
-END;
+/
