@@ -22,8 +22,8 @@ END;
 BEGIN DBMS_SCHEDULER.RUN_JOB('JOB_VENCER_METAS'); END;
 /
 -- EN CASO DE TENER LOS TRIGGERS EN LA BD, ELIMINARLOS
--- DROP TRIGGER trg_actualiza_saldo_meta;
--- DROP TRIGGER trg_valida_fecha_aportes_meta;
--- DROP TRIGGER trg_valida_fecha_meta;
+ DROP TRIGGER trg_actualiza_saldo_meta;
+ DROP TRIGGER trg_valida_fecha_aportes_meta;
+ DROP TRIGGER trg_valida_fecha_meta;
 
 commit;

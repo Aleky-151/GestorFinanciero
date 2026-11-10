@@ -9,6 +9,7 @@
 -- Los reportes pueden activarse o desactivarse
 -- El uso de fechas se utiliza en la vista, para ocultar los campos que piden al usuario delimitar
    el periodo de analisis del reporte.
+-- Se trabaja con 2 formatos, TABLA(T) y TEXTO(X)
 ==========================================================================================================
 */
 
@@ -22,27 +23,29 @@ CREATE TABLE reportes (
     usa_fechas     CHAR(1) DEFAULT 'S' NOT NULL,
     activo         CHAR(1) DEFAULT 'S' NOT NULL,
     solo_admin CHAR(1) DEFAULT 'N' NOT NULL,
+    formato CHAR(1) DEFAULT 'T' NOT NULL,
     CONSTRAINT pk_reportes PRIMARY KEY (id_reporte),
     CONSTRAINT ck_reportes_cat CHECK (categoria IN ('B','E','C','K')),
     CONSTRAINT ck_reportes_fechas CHECK (usa_fechas IN ('S','N')),
     CONSTRAINT ck_reportes_activo CHECK (activo IN ('S','N')),
     CONSTRAINT uq_reportes_proc UNIQUE (paquete, procedimiento),
-    CONSTRAINT ck_reportes_admin CHECK (solo_admin IN ('S','N'))
+    CONSTRAINT ck_reportes_admin CHECK (solo_admin IN ('S','N')),
+    CONSTRAINT ck_reportes_formato CHECK (formato IN ('T','X'))
 );
 
-SELECT * FROM OPCIONES;
-
+-- MENU DINAMICO: REPORTES
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, icono, orden)
 VALUES ('Reportes','/reportes','fas fa-file-lines', 50);
+--Verificar la id de Reportes antes de continuar
 
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes basicos','/reportes/basicos', 61, 51);
+VALUES ('Reportes basicos','/reportes/basicos', 21, 51);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes especificos','/reportes/especificos', 61, 52);
+VALUES ('Reportes especificos','/reportes/especificos', 21, 52);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes complejos','/reportes/complejos', 61, 53);
+VALUES ('Reportes complejos','/reportes/complejos', 21, 53);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes de control','/reportes/control', 61, 54);
+VALUES ('Reportes de control','/reportes/control', 21, 54);
 
 commit;
 
@@ -58,6 +61,6 @@ ADD rol_requerido VARCHAR2(10) NULL;
 
 -- Asignación de los reportes de control a solo el administrador
 SELECT * FROM OPCIONES ORDER BY orden ASC;
-UPDATE OPCIONES SET rol_requerido='ADMIN' WHERE id_opcion=65;
+UPDATE OPCIONES SET rol_requerido='ADMIN' WHERE id_opcion=29;
 
 commit;
