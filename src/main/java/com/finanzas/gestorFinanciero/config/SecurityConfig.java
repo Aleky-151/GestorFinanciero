@@ -31,7 +31,8 @@ public class SecurityConfig {
             .formLogin(f -> f
                 .loginPage("/login")
                 .defaultSuccessUrl("/cuentas", true))
-            .logout(l -> l.logoutSuccessUrl("/login?logout"));
+            .logout(l -> l.logoutSuccessUrl("/login?logout"))
+            .headers(h -> h.frameOptions(f -> f.sameOrigin()));
         return http.build();
     }
 }

@@ -13,13 +13,19 @@ import jakarta.validation.constraints.*;
 public class RegistroForm {
     @NotBlank 
     @Size(max = 100) 
+    @Pattern(regexp = "^[\\p{L}][\\p{L} .'-]*$",
+         message = "Solo letras, espacios, punto, apóstrofe y guion")
     private String nombres;
     
     @NotBlank 
     @Size(max = 50)  
+    @Pattern(regexp = "^[\\p{L}][\\p{L} .'-]*$",
+         message = "Solo letras, espacios, punto, apóstrofe y guion")
     private String apPaterno;
     
-    @Size(max = 50)            
+    @Size(max = 50) 
+    @Pattern(regexp = "^[\\p{L}][\\p{L} .'-]*$",
+         message = "Solo letras, espacios, punto, apóstrofe y guion")
     private String apMaterno;
     
     @NotBlank 

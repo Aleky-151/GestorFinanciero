@@ -35,17 +35,17 @@ CREATE TABLE reportes (
 
 -- MENU DINAMICO: REPORTES
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, icono, orden)
-VALUES ('Reportes','/reportes','fas fa-file-lines', 50);
+VALUES ('Reportes',null,'fas fa-file-pdf', 50);
 --Verificar la id de Reportes antes de continuar
 
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes basicos','/reportes/basicos', 21, 51);
+VALUES ('Reportes basicos','/reportes?categoria=B', 21, 51);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes especificos','/reportes/especificos', 21, 52);
+VALUES ('Reportes especificos','/reportes?categoria=E', 21, 52);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes complejos','/reportes/complejos', 21, 53);
+VALUES ('Reportes complejos','/reportes?categoria=C', 21, 53);
 INSERT INTO OPCIONES(nombre_opcion, url_opcion, id_opcion_ref, orden)
-VALUES ('Reportes de control','/reportes/control', 21, 54);
+VALUES ('Reportes de control','/reportes?categoria=K', 21, 54);
 
 commit;
 

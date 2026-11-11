@@ -27,8 +27,10 @@ public class MenuAdvice {
     }
 
     @ModelAttribute("menu")
-    public List<MenuItem> menu() {
-        return menuService.arbol();
+    public List<MenuItem> menu(@AuthenticationPrincipal UsuarioPrincipal u) {
+        if (u == null) return List.of();     
+        boolean admin = u.isAdmin();
+        return menuService.arbol(admin);
     }
 
     @ModelAttribute("rutaActual")

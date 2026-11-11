@@ -35,6 +35,9 @@ public class Opcion {
 
     @Column(name = "activo", nullable = false, length = 1)
     private String activo;
+    
+    @Column(name = "rol_requerido", nullable = true)
+    private String rolRequerido;
 
     public Long getId() {
         return id;
@@ -90,5 +93,9 @@ public class Opcion {
 
     public void setActivo(String activo) {
         this.activo = activo;
+    }
+
+    public String getRolRequerido() {
+        return rolRequerido;
     }
 }

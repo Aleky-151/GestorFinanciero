@@ -25,19 +25,20 @@ public class MenuService {
     }
 
     @Transactional(readOnly = true)
-    public List<MenuItem> arbol() {
-        List<Opcion> todas = opcionRepo.findByActivoOrderByOrdenAsc("S");
+    public List<MenuItem> arbol(boolean esAdmin) {
+        String rol = esAdmin ? "ADMIN" : "NO_APLICA";
+        List<Opcion> todas = opcionRepo.findVisibles(rol);
         return todas.stream()
-                .filter(o -> o.getIdOpcionRef() == null)
-                .map(o -> convertir(o, todas))
-                .toList();
+                    .filter(o -> o.getIdOpcionRef() == null)
+                    .map(o -> convertir(o, todas, esAdmin))
+                    .toList();
     }
 
-    private MenuItem convertir(Opcion o, List<Opcion> todas) {
-        List<MenuItem> hijos = todas.stream()
-                .filter(h -> o.getId().equals(h.getIdOpcionRef()))
-                .map(h -> convertir(h, todas))
-                .toList();
+    private MenuItem convertir(Opcion o, List<Opcion> todas, boolean esAdmin) {
+        List<MenuItem> hijos= todas.stream()
+                    .filter(h -> o.getId().equals(h.getIdOpcionRef()))
+                    .map(h -> convertir(h, todas, esAdmin))
+                    .toList();        
         return new MenuItem(o.getNombreOpcion(), o.getUrlOpcion(), o.getIcono(), hijos);
     }
 }

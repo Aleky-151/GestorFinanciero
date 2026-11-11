@@ -484,13 +484,13 @@ INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Estadística global de movimientos',
         'Resumen de todos los ingresos y gastos registrados en la aplicación: cantidad, promedio y variación de los montos.',
-        'PKG_REP_I1', 'REP_ESTADISTICA_MOVIMIENTOS_T', 'S', 'S', 'S', 'T');
+        'PKG_REP_I1', 'REP_ESTADISTICA_MOVIMIENTOS_T', 'S', 'N', 'S', 'T');
         
 INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Estadística global de movimientos',
         'Resumen de todos los ingresos y gastos registrados en la aplicación: cantidad, promedio y variación de los montos.',
-        'PKG_REP_I1', 'REP_ESTADISTICA_MOVIMIENTOS_X', 'S', 'N', 'S', 'X');
+        'PKG_REP_I1', 'REP_ESTADISTICA_MOVIMIENTOS_X', 'S', 'S', 'S', 'X');
 
 COMMIT;
 
@@ -498,13 +498,13 @@ INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Balance general de cuentas y saldos',
         'Tus cuentas de mayor a menor saldo, con el total, el promedio y qué porcentaje de tu dinero tiene cada una.',
-        'PKG_REP_I1', 'REP_BALANCE_CUENTAS_SALDO_T', 'N', 'S', 'N', 'T');
+        'PKG_REP_I1', 'REP_BALANCE_CUENTAS_SALDO_T', 'N', 'N', 'N', 'T');
 
 INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Balance general de cuentas y saldos',
         'Tus cuentas de mayor a menor saldo, con el total, el promedio y qué porcentaje de tu dinero tiene cada una.',
-        'PKG_REP_I1', 'REP_BALANCE_CUENTAS_SALDO_X', 'N', 'N', 'N', 'X');
+        'PKG_REP_I1', 'REP_BALANCE_CUENTAS_SALDO_X', 'N', 'S', 'N', 'X');
 
 COMMIT;
 
@@ -512,13 +512,13 @@ INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Proximos vencimientos de metas',
         'Metas que vencen en los próximos 30 días: cuánto llevas, cuánto te falta y cuánto ahorrar por día para llegar a tiempo.',
-        'PKG_REP_I1', 'REP_METAS_VENCIMIENTO_30DIAS_T', 'N', 'S', 'N', 'T');
+        'PKG_REP_I1', 'REP_METAS_VENCIMIENTO_30DIAS_T', 'N', 'N', 'N', 'T');
 
 INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Proximos vencimientos de metas',
         'Metas que vencen en los próximos 30 días: cuánto llevas, cuánto te falta y cuánto ahorrar por día para llegar a tiempo.',
-        'PKG_REP_I1', 'REP_METAS_VENCIMIENTO_30DIAS_X', 'N', 'N', 'N', 'X');
+        'PKG_REP_I1', 'REP_METAS_VENCIMIENTO_30DIAS_X', 'N', 'S', 'N', 'X');
 
 COMMIT;
 
@@ -526,14 +526,12 @@ INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Listado de clientes registrados',
         'Lista de clientes registrados con su nombre completo.',
-        'PKG_REP_I1', 'REP_LISTADO_CLIENTES_T', 'N', 'S', 'S', 'T');
+        'PKG_REP_I1', 'REP_LISTADO_CLIENTES_T', 'N', 'N', 'S', 'T');
 
 INSERT INTO reportes (categoria, nombre, descripcion, paquete, procedimiento,
                       usa_fechas, activo, solo_admin, formato)
 VALUES ('B', 'Listado de clientes registrados',
         'Lista de clientes registrados con su nombre completo.',
-        'PKG_REP_I1', 'REP_LISTADO_CLIENTES_X', 'N', 'N', 'S', 'X');
+        'PKG_REP_I1', 'REP_LISTADO_CLIENTES_X', 'N', 'S', 'S', 'X');
 
 COMMIT;
-
-SELECT * FROM reportes;

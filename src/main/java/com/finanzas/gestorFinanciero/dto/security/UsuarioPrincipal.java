@@ -5,7 +5,9 @@
 package com.finanzas.gestorFinanciero.dto.security;
 
 import com.finanzas.gestorFinanciero.model.Usuario;
+import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
@@ -19,9 +21,20 @@ public class UsuarioPrincipal extends org.springframework.security.core.userdeta
     private final String nombreCompleto;
 
     public UsuarioPrincipal(Usuario u) {
-        super(u.getUsuario(), u.getClave(), List.of(new SimpleGrantedAuthority("ROLE_USER")));
-        this.codCliente = u.getCliente().getCodCliente();   // ajusta si lo renombraste a getId()
+        super(u.getUsuario(), u.getClave(), autoridades(u.getRol()));
+        this.codCliente = u.getCliente().getCodCliente();   
         this.nombreCompleto = u.getCliente().getNombres() + " " + u.getCliente().getAp_paterno();
+    }
+
+    private static List<GrantedAuthority> autoridades(String rol) {
+        List<GrantedAuthority> a = new ArrayList<>();
+        a.add(new SimpleGrantedAuthority("ROLE_USER"));        
+        if ("ADMIN".equals(rol)) a.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        return a;
+    }
+
+    public boolean isAdmin() {
+        return getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_ADMIN"));
     }
 
     public Long getCodCliente() { return codCliente; }

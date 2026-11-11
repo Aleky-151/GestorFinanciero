@@ -23,10 +23,13 @@ public class Usuario {
     @Column(name="clave", nullable= false)
     private String clave;
     
+    @Column(name="rol", nullable= false, insertable = false, updatable = false)
+    private String rol;
+    
     @OneToOne(fetch= FetchType.LAZY, optional= false)
     @JoinColumn(name="cod_cliente", nullable= false, unique= true)
     private Cliente cliente;
-
+    
     public Long getId() {
         return id;
     }
@@ -57,5 +60,9 @@ public class Usuario {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public String getRol() {
+        return rol;
     }
 }

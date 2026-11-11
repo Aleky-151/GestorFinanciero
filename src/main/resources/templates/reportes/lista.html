@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+    <head>
+       <title th:text="${tituloCat}">Reportes</title>
+    </head>
+
+<body>
+<section>
+        <h3 class="mb-3 fw-bold text-dark" th:text="${tituloCat}" style="font-size: 1.5rem;" >
+        </h3>
+
+        <div class="row">
+          <div class="col-md-4 mb-3" th:each="r : ${reportes}">
+            <div class="card card-reporte h-100">
+              <div class="card-header">
+                <h3 class="card-title" th:text="${r.nombre()}">Nombre</h3>
+              </div>
+              <div class="card-body" th:text="${r.descripcion()}">Descripción</div>
+              <div class="card-footer">
+                <a class="btn btn-primary btn-sm" th:href="@{/reportes/{id}(id=${r.id()})}">
+                  <i class="fas fa-file-pdf"></i> Ver reporte
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-muted" th:if="${#lists.isEmpty(reportes)}">
+            No hay reportes disponibles en esta categoría.
+        </p>
+</section>
+</body>
+</html>
